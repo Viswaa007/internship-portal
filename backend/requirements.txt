@@ -1,2 +1,10 @@
 flask
 gunicorn
+flask-login
+flask-sqlalchemy
+flask-wtf
+authlib
+python-dotenv
+email-validator
+requests
+werkzeug
