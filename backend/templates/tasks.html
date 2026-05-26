@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% block title %}Tasks | AI Internship Portal{% endblock %}
+{% block content %}
+<div class="container-fluid py-4 px-4">
+    <div class="page-header mb-4 d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="page-title"><i class="fas fa-tasks me-2 text-warning"></i>Task Management</h2>
+            <p class="text-muted mb-0">
+                {% if role == 'mentor' %}Manage and track tasks assigned to students{% else %}View and update your assigned tasks{% endif %}
+            </p>
+        </div>
+        {% if role == 'mentor' %}
+        <a href="{{ url_for('mentor.assign_task') }}" class="btn btn-warning rounded-pill px-4">
+            <i class="fas fa-plus me-2"></i>Assign New Task
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Task Stats -->
+    <div class="row g-4 mb-4">
+        {% set pending_count   = tasks | selectattr('status','equalto','pending')     | list | length %}
+        {% set progress_count  = tasks | selectattr('status','equalto','in_progress') | list | length %}
+        {% set complete_count  = tasks | selectattr('status','equalto','completed')   | list | length %}
+        {% set overdue_count   = tasks | selectattr('status','equalto','overdue')     | list | length %}
+        <div class="col-md-3 col-6">
+            <div class="stat-card stat-card-warning">
+                <div class="stat-icon"><i class="fas fa-hourglass-start"></i></div>
+                <div class="stat-content"><h3>{{ pending_count }}</h3><p>Pending</p></div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="stat-card stat-card-info">
+                <div class="stat-icon"><i class="fas fa-spinner"></i></div>
+                <div class="stat-content"><h3>{{ progress_count }}</h3><p>In Progress</p></div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="stat-card stat-card-success">
+                <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                <div class="stat-content"><h3>{{ complete_count }}</h3><p>Completed</p></div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="stat-card stat-card-danger">
+                <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                <div class="stat-content"><h3>{{ overdue_count }}</h3><p>Overdue</p></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-transparent border-0">
+            <ul class="nav nav-pills" id="taskTabs">
+                <li class="nav-item"><a class="nav-link active" href="#" data-filter="all">All Tasks</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" data-filter="pending">Pending</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" data-filter="in_progress">In Progress</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" data-filter="completed">Completed</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" data-filter="overdue">Overdue</a></li>
+            </ul>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="tasksTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">#</th>
+                            <th>Task</th>
+                            {% if role == 'mentor' %}<th>Student</th>{% endif %}
+                            <th>Priority</th>
+                            <th>Deadline</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in tasks %}
+                        <tr data-status="{{ task.status }}">
+                            <td class="ps-4">{{ loop.index }}</td>
+                            <td>
+                                <p class="mb-0 fw-semibold">{{ task.title }}</p>
+                                <small class="text-muted">{{ task.description[:60] if task.description else 'No description' }}...</small>
+                            </td>
+                            {% if role == 'mentor' %}
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm me-2">{{ task.student.full_name[0] if task.student else '?' }}</div>
+                                    <small>{{ task.student.full_name if task.student else 'N/A' }}</small>
+                                </div>
+                            </td>
+                            {% endif %}
+                            <td>
+                                <span class="badge bg-{{ 'danger' if task.priority=='high' else 'warning text-dark' if task.priority=='medium' else 'secondary' }} rounded-pill">
+                                    {{ task.priority.capitalize() }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if task.deadline %}
+                                    {% set today = [] %}
+                                    <span class="text-{{ 'danger fw-bold' if task.status not in ['completed'] else 'muted' }}">
+                                        {{ task.deadline.strftime('%d %b %Y') }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">No deadline</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge rounded-pill bg-{{
+                                    'warning text-dark' if task.status=='pending'
+                                    else 'info' if task.status=='in_progress'
+                                    else 'success' if task.status=='completed'
+                                    else 'danger' }}">
+                                    {{ task.status.replace('_',' ').title() }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if role == 'student' and task.status in ['pending','in_progress'] %}
+                                <div class="d-flex gap-1">
+                                    {% if task.status == 'pending' %}
+                                    <form method="POST" action="{{ url_for('student.update_task_status', task_id=task.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="status" value="in_progress">
+                                        <button class="btn btn-sm btn-outline-info rounded-pill">Start</button>
+                                    </form>
+                                    {% endif %}
+                                    {% if task.status == 'in_progress' %}
+                                    <form method="POST" action="{{ url_for('student.update_task_status', task_id=task.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="status" value="completed">
+                                        <button class="btn btn-sm btn-success rounded-pill">Done ✓</button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                                {% elif role == 'mentor' %}
+                                <button class="btn btn-sm btn-outline-secondary rounded-pill"
+                                        data-bs-toggle="modal" data-bs-target="#rateModal{{ task.id }}">
+                                    <i class="fas fa-star me-1"></i>Rate
+                                </button>
+                                <!-- Rate Modal -->
+                                <div class="modal fade" id="rateModal{{ task.id }}" tabindex="-1">
+                                    <div class="modal-dialog modal-sm">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h6 class="modal-title">Rate Task</h6>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <form method="POST" action="{{ url_for('mentor.rate_task', task_id=task.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <div class="modal-body">
+                                                    <label class="form-label">Rating (1–5)</label>
+                                                    <select name="rating" class="form-select mb-2">
+                                                        {% for r in [1,2,3,4,5] %}
+                                                        <option value="{{ r }}" {{ 'selected' if task.mentor_rating==r }}>{{ r }} Star{{ 's' if r>1 }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                    <label class="form-label">Update Status</label>
+                                                    <select name="status" class="form-select">
+                                                        <option value="pending" {{ 'selected' if task.status=='pending' }}>Pending</option>
+                                                        <option value="in_progress" {{ 'selected' if task.status=='in_progress' }}>In Progress</option>
+                                                        <option value="completed" {{ 'selected' if task.status=='completed' }}>Completed</option>
+                                                    </select>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="submit" class="btn btn-primary btn-sm">Save</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% else %}
+                                <span class="text-success"><i class="fas fa-check-circle"></i> Done</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="7" class="text-center py-5 text-muted">
+                            <i class="fas fa-tasks fa-3x mb-3 d-block"></i>No tasks found.
+                        </td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Filter tabs
+document.querySelectorAll('#taskTabs .nav-link').forEach(tab => {
+    tab.addEventListener('click', function(e) {
+        e.preventDefault();
+        document.querySelectorAll('#taskTabs .nav-link').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        const filter = this.dataset.filter;
+        document.querySelectorAll('#tasksTable tbody tr[data-status]').forEach(row => {
+            row.style.display = (filter === 'all' || row.dataset.status === filter) ? '' : 'none';
+        });
+    });
+});
+</script>
+{% endblock %}

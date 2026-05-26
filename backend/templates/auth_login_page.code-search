@@ -1,0 +1,80 @@
+# Query: auth.login_page
+# ContextLines: 1
+
+17 results - 9 files
+
+backend\app.py:
+  41  # IMPORTANT FIX
+  42: login_manager.login_view = "auth.login_page"
+  43  
+
+  77  
+  78:     return redirect(url_for("auth.login_page"))
+  79  
+
+backend\routes\admin_routes.py:
+  26              flash('Access denied. Admin privileges required.', 'danger')
+  27:             return redirect(url_for('auth.login_page'))
+  28          return f(*args, **kwargs)
+
+backend\routes\auth_routes.py:
+   98  
+   99:     return redirect(url_for('auth.login_page'))
+  100  
+
+  181  
+  182:             return redirect(url_for('auth.login_page'))
+  183  
+
+  210  
+  211:             return redirect(url_for('auth.login_page'))
+  212  
+
+  222  
+  223:             return redirect(url_for('auth.login_page'))
+  224  
+
+  291  
+  292:         return redirect(url_for('auth.login_page'))
+
+backend\routes\mentor_routes.py:
+  22              flash('Access denied.', 'danger')
+  23:             return redirect(url_for('auth.login_page'))
+  24          return f(*args, **kwargs)
+
+  38          flash('Mentor profile not found.', 'danger')
+  39:         return redirect(url_for('auth.login_page'))
+  40  
+
+backend\routes\student_routes.py:
+   65          if not current_user.is_authenticated:
+   66:             return redirect(url_for('auth.login_page'))
+   67  
+
+   70              flash('Access denied.', 'danger')
+   71:             return redirect(url_for('auth.login_page'))
+   72  
+
+  234          return redirect(
+  235:             url_for('auth.login_page')
+  236          )
+
+backend\templates\forgot_password.html:
+  37                          </button>
+  38:                         <p class="text-center mt-3"><a href="{{ url_for('auth.login_page') }}"><i class="fas fa-arrow-left me-1"></i>Back to Login</a></p>
+  39                      </form>
+
+backend\templates\login.html:
+  104                  <!-- LOGIN FORM -->
+  105:                 <form method="POST" action="{{ url_for('auth.login_page') }}">
+  106  
+
+backend\templates\register_mentor.html:
+  85                          <p class="text-center mt-3 mb-0">
+  86:                             Already have an account? <a href="{{ url_for('auth.login_page') }}" class="text-primary">Sign in</a>
+  87                          </p>
+
+backend\templates\register.html:
+  92                          <p class="text-center mt-3 mb-0">
+  93:                             Already have an account? <a href="{{ url_for('auth.login_page') }}" class="text-primary">Sign in</a>
+  94                          </p>

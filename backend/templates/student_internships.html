@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Browse Internships | Student{% endblock %}
+{% block content %}
+<div class="container-fluid py-4 px-4">
+    <div class="page-header mb-4">
+        <h2 class="page-title"><i class="fas fa-briefcase me-2 text-primary"></i>Browse Internships</h2>
+        <p class="text-muted mb-0">Find and apply for internship programs</p>
+    </div>
+
+    <!-- My Applications Status -->
+    {% if my_applications %}
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-transparent border-0"><h6 class="fw-semibold mb-0"><i class="fas fa-list me-2"></i>My Applications</h6></div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead class="table-light"><tr><th class="ps-4">Internship</th><th>Applied On</th><th>Resume Score</th><th>Status</th></tr></thead>
+                    <tbody>
+                        {% for app in my_applications %}
+                        <tr>
+                            <td class="ps-4 fw-semibold">{{ app.internship.title if app.internship else 'N/A' }}</td>
+                            <td><small>{{ app.applied_at.strftime('%d %b %Y') if app.applied_at else '—' }}</small></td>
+                            <td><small>{{ "%.1f"|format(app.resume_score|float) }}%</small></td>
+                            <td><span class="badge rounded-pill bg-{{ 'warning text-dark' if app.status=='pending' else 'success' if app.status=='approved' else 'danger' }}">{{ app.status.capitalize() }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Available Internships -->
+    <div class="row g-4">
+        {% for internship in internships %}
+        <div class="col-lg-6 col-xl-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="badge bg-success rounded-pill">Open</span>
+                        <span class="badge bg-light text-dark border">{{ internship.domain or 'General' }}</span>
+                    </div>
+                    <h5 class="fw-bold mb-2">{{ internship.title }}</h5>
+                    <p class="text-muted small mb-3">{{ internship.description[:100] if internship.description else 'No description' }}...</p>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6"><small class="text-muted"><i class="fas fa-clock me-1"></i>{{ internship.duration_weeks }} weeks</small></div>
+                        <div class="col-6"><small class="text-muted"><i class="fas fa-users me-1"></i>{{ internship.max_students }} seats</small></div>
+                        {% if internship.start_date %}
+                        <div class="col-12"><small class="text-muted"><i class="fas fa-calendar me-1"></i>{{ internship.start_date.strftime('%d %b %Y') }} — {{ internship.end_date.strftime('%d %b %Y') if internship.end_date else 'TBD' }}</small></div>
+                        {% endif %}
+                    </div>
+                    {% if internship.required_skills %}
+                    <div class="mb-3">
+                        {% for skill in internship.required_skills.split(',')[:4] %}
+                        <span class="badge bg-light text-dark border me-1 mb-1">{{ skill.strip() }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% if internship.mentor %}
+                    <p class="small text-muted mb-3"><i class="fas fa-chalkboard-teacher me-1"></i>{{ internship.mentor.full_name }}</p>
+                    {% endif %}
+                    {% if internship.id in applied_internship_ids %}
+                    <button class="btn btn-secondary w-100 rounded-pill" disabled><i class="fas fa-check me-2"></i>Applied</button>
+                    {% else %}
+                    <form method="POST" action="{{ url_for('student.apply_internship', internship_id=internship.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-primary w-100 rounded-pill"><i class="fas fa-paper-plane me-2"></i>Apply Now</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12 text-center py-5 text-muted"><i class="fas fa-briefcase fa-3x mb-3 d-block"></i>No open internships available right now.</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

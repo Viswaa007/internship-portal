@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}AI Resume Analyzer{% endblock %}
+{% block content %}
+<div class="container-fluid py-4 px-4">
+    <div class="page-header mb-4">
+        <h2 class="page-title"><i class="fas fa-robot me-2 text-primary"></i>AI Resume Analyzer</h2>
+        <p class="text-muted">Upload your resume for AI-powered skill extraction and match scoring</p>
+    </div>
+    <div class="row g-4">
+        <!-- Upload Panel -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header py-3 rounded-top-4" style="background:linear-gradient(135deg,#0d6efd,#6610f2)">
+                    <h5 class="mb-0 text-white"><i class="fas fa-upload me-2"></i>Upload &amp; Analyze</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form id="resumeForm" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Target Internship</label>
+                            <select name="internship_id" class="form-select">
+                                <option value="">— General Analysis —</option>
+                                {% for i in internships %}<option value="{{ i.id }}">{{ i.title }}</option>{% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Resume File (PDF/DOCX)</label>
+                            <div class="border rounded-3 p-4 text-center" id="dropZone" onclick="document.getElementById('resumeFile').click()" style="cursor:pointer;background:#f8f9fa">
+                                <input type="file" name="resume" id="resumeFile" accept=".pdf,.doc,.docx" class="d-none" onchange="showFile(this)">
+                                <i class="fas fa-file-pdf fa-2x text-danger mb-2"></i>
+                                <p class="mb-0 fw-semibold" id="dropText">Click to upload PDF / DOCX</p>
+                                <small class="text-muted" id="fileName"></small>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill" id="analyzeBtn">
+                            <i class="fas fa-brain me-2"></i>Analyze with AI
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <!-- How it works -->
+            <div class="card border-0 shadow-sm rounded-4 mt-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-semibold mb-3"><i class="fas fa-info-circle me-2 text-info"></i>How It Works</h6>
+                    <div class="d-flex mb-3"><span class="step-num me-3">1</span><div><strong>Extract</strong><br><small class="text-muted">PyPDF2 pulls text from your PDF</small></div></div>
+                    <div class="d-flex mb-3"><span class="step-num me-3">2</span><div><strong>NLP Mining</strong><br><small class="text-muted">NLTK + spaCy detect skills</small></div></div>
+                    <div class="d-flex mb-3"><span class="step-num me-3">3</span><div><strong>TF-IDF Match</strong><br><small class="text-muted">scikit-learn cosine similarity</small></div></div>
+                    <div class="d-flex"><span class="step-num me-3">4</span><div><strong>Score</strong><br><small class="text-muted">0–100 match score + recommendations</small></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Panel -->
+        <div class="col-lg-7">
+            <div id="defaultPanel" class="card border-0 shadow-sm rounded-4">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-robot fa-4x mb-4" style="color:#dee2e6"></i>
+                    <h5 class="text-muted">Upload a resume to start analysis</h5>
+                </div>
+            </div>
+            <div id="loadingPanel" class="card border-0 shadow-sm rounded-4 d-none">
+                <div class="card-body text-center py-5">
+                    <div class="spinner-border text-primary mb-3" style="width:3rem;height:3rem"></div>
+                    <h5>AI analyzing your resume...</h5>
+                </div>
+            </div>
+            <div id="resultsPanel" class="d-none">
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-body p-4 text-center">
+                        <h5 class="fw-semibold mb-3">Match Score</h5>
+                        <div class="position-relative d-inline-block mb-3">
+                            <canvas id="scoreChart" width="150" height="150"></canvas>
+                            <div class="position-absolute top-50 start-50 translate-middle text-center">
+                                <span class="fs-2 fw-bold" id="scoreVal">0</span><br><small>/ 100</small>
+                            </div>
+                        </div>
+                        <br>
+                        <span class="badge rounded-pill fs-6 px-4 py-2 me-2" id="recBadge">—</span>
+                        <span class="badge bg-secondary rounded-pill fs-6 px-3 py-2" id="gradeBadge">—</span>
+                    </div>
+                </div>
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-header bg-transparent border-0"><h6 class="fw-semibold mb-0"><i class="fas fa-code me-2 text-success"></i>Skills Analysis</h6></div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6"><h6 class="text-success small fw-bold">✓ Matched</h6><div id="matchedSkills"></div></div>
+                            <div class="col-md-6"><h6 class="text-danger small fw-bold">✗ Missing</h6><div id="missingSkills"></div></div>
+                        </div>
+                        <hr><h6 class="text-primary small fw-bold">All Detected Skills</h6><div id="allSkills"></div>
+                    </div>
+                </div>
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-header bg-transparent border-0"><h6 class="fw-semibold mb-0"><i class="fas fa-chart-bar me-2 text-info"></i>Score Breakdown</h6></div>
+                    <div class="card-body"><canvas id="breakdownChart" height="130"></canvas></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+let scoreChart, breakdownChart;
+function showFile(input) {
+    if (input.files[0]) { document.getElementById('fileName').textContent = input.files[0].name; }
+}
+document.getElementById('resumeForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    if (!document.getElementById('resumeFile').files[0]) { alert('Please select a file.'); return; }
+    document.getElementById('defaultPanel').classList.add('d-none');
+    document.getElementById('resultsPanel').classList.add('d-none');
+    document.getElementById('loadingPanel').classList.remove('d-none');
+    document.getElementById('analyzeBtn').disabled = true;
+    const fd = new FormData(this);
+    try {
+        const res = await fetch("{{ url_for('ai.resume_analyze') }}", { method: 'POST', body: fd, headers: { 'X-CSRFToken': document.querySelector('meta[name=csrf-token]')?.content || '' } });
+        const data = await res.json();
+        if (data.success) showResults(data.result);
+        else { alert(data.error || 'Analysis failed'); document.getElementById('defaultPanel').classList.remove('d-none'); }
+    } catch(err) { alert('Error: ' + err.message); document.getElementById('defaultPanel').classList.remove('d-none'); }
+    finally { document.getElementById('loadingPanel').classList.add('d-none'); document.getElementById('analyzeBtn').disabled = false; }
+});
+function showResults(r) {
+    document.getElementById('resultsPanel').classList.remove('d-none');
+    const s = r.match_score || 0;
+    document.getElementById('scoreVal').textContent = s.toFixed(1);
+    const rb = document.getElementById('recBadge');
+    rb.textContent = r.recommendation || 'N/A';
+    rb.className = 'badge rounded-pill fs-6 px-4 py-2 me-2 bg-' + (s>=80?'success':s>=60?'primary':s>=40?'warning text-dark':'danger');
+    document.getElementById('gradeBadge').textContent = 'Grade: ' + (r.grade||'N/A');
+    if (scoreChart) scoreChart.destroy();
+    scoreChart = new Chart(document.getElementById('scoreChart'), {
+        type:'doughnut', data:{datasets:[{data:[s,100-s],backgroundColor:[s>=70?'#28a745':s>=40?'#ffc107':'#dc3545','#e9ecef'],borderWidth:0}]},
+        options:{cutout:'72%',plugins:{legend:{display:false},tooltip:{enabled:false}}}
+    });
+    const mk = t => `<span class="badge rounded-pill me-1 mb-1 ${t[1]}">${t[0]}</span>`;
+    document.getElementById('matchedSkills').innerHTML = (r.matched_skills||[]).map(s=>[s,'bg-success']).map(mk).join('')||'<small class="text-muted">None</small>';
+    document.getElementById('missingSkills').innerHTML = (r.missing_skills||[]).map(s=>[s,'bg-danger']).map(mk).join('')||'<small class="text-success">All matched!</small>';
+    document.getElementById('allSkills').innerHTML = (r.extracted_skills||[]).map(s=>[s,'bg-light text-dark border']).map(mk).join('')||'<small class="text-muted">None detected</small>';
+    if (breakdownChart) breakdownChart.destroy();
+    breakdownChart = new Chart(document.getElementById('breakdownChart'), {
+        type:'bar', data:{labels:['Skill Match','TF-IDF','Overall'],datasets:[{data:[r.skill_score||0,r.tfidf_score||0,s],backgroundColor:['#28a745','#0d6efd','#6f42c1'],borderRadius:6}]},
+        options:{responsive:true,scales:{y:{beginAtZero:true,max:100}},plugins:{legend:{display:false}}}
+    });
+}
+</script>
+{% endblock %}

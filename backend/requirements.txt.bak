@@ -1,0 +1,59 @@
+# =============================================================
+# File: backend/requirements.txt
+# Install: pip install -r requirements.txt
+#
+# NOTE: Do NOT put spaCy model URLs here — install separately!
+# =============================================================
+
+# --- Core Flask ---
+Flask==3.0.0
+Flask-SQLAlchemy==3.1.1
+Flask-Login==0.6.3
+Flask-WTF==1.2.1
+Werkzeug==3.0.1
+
+# --- Database ---
+PyMySQL==1.1.0
+SQLAlchemy==2.0.23
+
+# --- AI / ML (spaCy model installed separately — see below) ---
+scikit-learn==1.3.2
+nltk==3.8.1
+spacy==3.7.2
+PyPDF2==3.0.1
+numpy==1.26.2
+joblib==1.3.2
+
+# --- PDF / Image ---
+reportlab==4.0.7
+Pillow==10.1.0
+
+# --- Utilities ---
+python-dotenv==1.0.0
+cryptography==41.0.7
+
+# --- Production WSGI ---
+gunicorn==21.2.0
+
+# =============================================================
+# STEP 2 — After pip install -r requirements.txt, run:
+#
+#   python -m nltk.downloader punkt stopwords wordnet averaged_perceptron_tagger
+#
+# STEP 3 — Install spaCy model (pick ONE based on your spaCy version):
+#
+#   python -m spacy --version        ← check version first
+#
+#   spaCy 3.7.x:
+#   python -m spacy download en_core_web_sm
+#   OR direct:
+#   pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1-py3-none-any.whl
+#
+#   spaCy 3.6.x:
+#   pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.6.0/en_core_web_sm-3.6.0-py3-none-any.whl
+#
+#   spaCy 3.5.x:
+#   pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.5.0/en_core_web_sm-3.5.0-py3-none-any.whl
+#
+# IMPORTANT: The portal works WITHOUT spaCy — it falls back to NLTK-only.
+# =============================================================

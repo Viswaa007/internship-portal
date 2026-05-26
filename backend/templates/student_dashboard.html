@@ -1,0 +1,269 @@
+<!-- =============================================================
+     File: backend/templates/student_dashboard.html
+     ============================================================= -->
+{% extends "base.html" %}
+{% block title %}Student Dashboard | AI Internship Portal{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-4">
+    <div class="page-header mb-4">
+        <h2 class="page-title"><i class="fas fa-tachometer-alt me-2 text-primary"></i>My Dashboard</h2>
+        <p class="text-muted">Welcome, <strong>{{ student.full_name }}</strong>!</p>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card stat-card-primary">
+                <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+                <div class="stat-content"><h3>{{ attendance_pct }}%</h3><p>Attendance</p></div>
+                <a href="{{ url_for('student.attendance') }}" class="stat-link">View <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card stat-card-success">
+                <div class="stat-icon"><i class="fas fa-tasks"></i></div>
+                <div class="stat-content"><h3>{{ task_completion }}%</h3><p>Tasks Completed</p></div>
+                <a href="{{ url_for('student.tasks') }}" class="stat-link">View <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card stat-card-warning">
+                <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                <div class="stat-content"><h3>{{ pending_tasks|length }}</h3><p>Pending Tasks</p></div>
+                <a href="{{ url_for('student.tasks') }}" class="stat-link">View <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card stat-card-info">
+                <div class="stat-icon"><i class="fas fa-comments"></i></div>
+                <div class="stat-content"><h3>{{ recent_feedback|length }}</h3><p>New Feedback</p></div>
+                <a href="{{ url_for('student.feedback') }}" class="stat-link">View <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <!-- Current Internship Card -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="fw-semibold mb-0"><i class="fas fa-briefcase me-2 text-primary"></i>Current Internship</h5>
+                </div>
+                <div class="card-body">
+                    {% if internship %}
+                    <h4 class="fw-bold text-primary">{{ internship.title }}</h4>
+                    <p class="text-muted">{{ internship.description }}</p>
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <span class="badge bg-light text-dark border"><i class="fas fa-tag me-1"></i>{{ internship.domain }}</span>
+                        <span class="badge bg-light text-dark border"><i class="fas fa-clock me-1"></i>{{ internship.duration_weeks }} weeks</span>
+                        <span class="badge bg-success">Active</span>
+                    </div>
+                    <div class="row">
+                        <div class="col-6"><p class="mb-1"><strong>Start:</strong> {{ internship.start_date.strftime('%d %b %Y') if internship.start_date else 'TBD' }}</p></div>
+                        <div class="col-6"><p class="mb-1"><strong>End:</strong> {{ internship.end_date.strftime('%d %b %Y') if internship.end_date else 'TBD' }}</p></div>
+                    </div>
+                    {% if internship.mentor %}
+                    <p class="mt-2 mb-0"><i class="fas fa-chalkboard-teacher me-2 text-success"></i>
+                    <strong>Mentor:</strong> {{ internship.mentor.full_name }} — {{ internship.mentor.designation }}</p>
+                    {% endif %}
+                    <!-- Progress Bar -->
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small class="fw-semibold">Overall Progress</small>
+                            <small>{{ task_completion }}%</small>
+                        </div>
+                        <div class="progress" style="height:10px">
+                            <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated"
+                                 style="width:{{ task_completion }}%"></div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-briefcase fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Not enrolled in any internship yet.</p>
+                        <a href="{{ url_for('student.internships') }}" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i>Browse Internships
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Pending Tasks -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-semibold mb-0"><i class="fas fa-tasks me-2 text-warning"></i>Pending Tasks</h5>
+                    <a href="{{ url_for('student.tasks') }}" class="btn btn-sm btn-outline-warning rounded-pill">All Tasks</a>
+                </div>
+                <div class="card-body p-0">
+                    {% if pending_tasks %}
+                    <div class="list-group list-group-flush">
+                        {% for task in pending_tasks %}
+                        <div class="list-group-item border-0 px-4 py-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1 fw-semibold">{{ task.title }}</h6>
+                                    <small class="text-muted"><i class="fas fa-calendar me-1"></i>Due: {{ task.deadline.strftime('%d %b %Y') if task.deadline else 'No deadline' }}</small>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <span class="badge bg-{{ 'danger' if task.priority=='high' else 'warning' if task.priority=='medium' else 'secondary' }}">{{ task.priority.capitalize() }}</span>
+                                    <form method="POST" action="{{ url_for('student.update_task_status', task_id=task.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="status" value="in_progress">
+                                        <button class="btn btn-sm btn-outline-primary rounded-pill">Start</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-center text-muted py-4"><i class="fas fa-check-circle text-success me-2"></i>All tasks up to date!</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Attendance Chart -->
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="fw-semibold mb-0"><i class="fas fa-calendar-alt me-2 text-info"></i>Recent Attendance</h5>
+                </div>
+                <div class="card-body"><canvas id="attendanceChart" height="100"></canvas></div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-lg-4">
+            <!-- Profile Card -->
+<div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body text-center py-4">
+
+        {% if student.profile_pic %}
+            <img src="{{ url_for('static', filename='uploads/' + student.profile_pic) }}"
+                 class="rounded-circle shadow mb-3"
+                 width="110"
+                 height="110"
+                 style="object-fit: cover; border:4px solid #4e73df;">
+        {% else %}
+            <div class="profile-avatar mx-auto mb-3">
+                {{ student.full_name[0].upper() }}
+            </div>
+        {% endif %}
+
+        <h5 class="fw-bold mb-1">{{ student.full_name }}</h5>
+
+        <p class="text-muted mb-1">
+            {{ student.department }} |
+            {{ student.year_of_study or 'N/A' }}
+        </p>
+
+        <p class="text-muted mb-2 small">
+            <i class="fas fa-university me-1"></i>
+            {{ student.college or 'N/A' }}
+        </p>
+
+        {% if student.cgpa %}
+        <span class="badge bg-primary mb-2">
+            <i class="fas fa-star me-1"></i>
+            CGPA: {{ student.cgpa }}
+        </span>
+        {% endif %}
+
+        <hr>
+
+        <div class="row text-center">
+            <div class="col-6 border-end">
+                <h5 class="mb-0 fw-bold text-primary">
+                    {{ attendance_pct }}%
+                </h5>
+                <small class="text-muted">Attendance</small>
+            </div>
+
+            <div class="col-6">
+                <h5 class="mb-0 fw-bold text-success">
+                    {{ task_completion }}%
+                </h5>
+                <small class="text-muted">Tasks Done</small>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="d-grid gap-2">
+            <a href="{{ url_for('student.profile') }}"
+               class="btn btn-outline-primary btn-sm">
+               <i class="fas fa-edit me-1"></i>Edit Profile
+            </a>
+
+            <a href="{{ url_for('student.resume_upload') }}"
+               class="btn btn-outline-success btn-sm">
+               <i class="fas fa-file-upload me-1"></i>Upload Resume
+            </a>
+        </div>
+
+    </div>
+</div>
+            <!-- Mark Attendance -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body">
+                    <h6 class="fw-semibold mb-3"><i class="fas fa-check-circle me-2 text-success"></i>Mark Today's Attendance</h6>
+                    {% if internship %}
+                    <form method="POST" action="{{ url_for('student.mark_attendance') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-success w-100"><i class="fas fa-calendar-check me-2"></i>Mark Present</button>
+                    </form>
+                    {% else %}
+                    <p class="text-muted small mb-0">Enroll in an internship first.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Recent Feedback -->
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="fw-semibold mb-0"><i class="fas fa-comments me-2 text-info"></i>Recent Feedback</h6>
+                </div>
+                <div class="card-body">
+                    {% for fb in recent_feedback %}
+                    <div class="p-3 rounded-3 bg-light mb-2">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small class="fw-semibold">{{ fb.mentor.full_name }}</small>
+                            <div>{% for i in range(fb.rating or 0) %}<i class="fas fa-star text-warning" style="font-size:0.65rem"></i>{% endfor %}</div>
+                        </div>
+                        <p class="mb-0 small text-muted">{{ fb.feedback_text[:80] }}...</p>
+                    </div>
+                    {% else %}
+                    <p class="text-muted small text-center py-2">No feedback yet.</p>
+                    {% endfor %}
+                    <a href="{{ url_for('student.feedback') }}" class="btn btn-sm btn-outline-info w-100 mt-2">View All Feedback</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const attendanceDates = {{ recent_attendance | map(attribute='date') | list | tojson | safe if recent_attendance else '[]' }};
+const attendanceStatuses = {{ recent_attendance | map(attribute='status') | list | tojson | safe if recent_attendance else '[]' }};
+const presentData = attendanceStatuses.map(s => s === 'present' ? 1 : 0);
+new Chart(document.getElementById('attendanceChart'), {
+    type: 'bar',
+    data: {
+        labels: attendanceDates.length ? attendanceDates.map(d => new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short'})) : ['No records yet'],
+        datasets: [{
+            label: 'Attendance',
+            data: presentData.length ? presentData : [0],
+            backgroundColor: presentData.map(v => v===1 ? 'rgba(40,167,69,0.75)' : 'rgba(220,53,69,0.75)'),
+            borderRadius: 5
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: { y: { max: 1.5, ticks: { stepSize: 1, callback: v => v===1 ? 'Present' : v===0 ? 'Absent' : '' } } },
+        plugins: { legend: { display: false } }
+    }
+});
+</script>
+{% endblock %}

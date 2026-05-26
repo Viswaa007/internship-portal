@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Applications | Admin{% endblock %}
+{% block content %}
+<div class="container-fluid py-4 px-4">
+    <div class="page-header mb-4">
+        <h2 class="page-title"><i class="fas fa-file-alt me-2 text-info"></i>Internship Applications</h2>
+        <p class="text-muted mb-0">Review and approve/reject student applications</p>
+    </div>
+
+    <!-- Filter pills -->
+    <div class="mb-4">
+        <span class="badge bg-warning text-dark rounded-pill px-3 py-2 me-2">Pending: {{ applications | selectattr('status','equalto','pending') | list | length }}</span>
+        <span class="badge bg-success rounded-pill px-3 py-2 me-2">Approved: {{ applications | selectattr('status','equalto','approved') | list | length }}</span>
+        <span class="badge bg-danger rounded-pill px-3 py-2">Rejected: {{ applications | selectattr('status','equalto','rejected') | list | length }}</span>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr><th class="ps-4">#</th><th>Student</th><th>Internship</th><th>Applied</th><th>Resume Score</th><th>Status</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for app in applications %}
+                        <tr>
+                            <td class="ps-4">{{ loop.index }}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm me-2">{{ app.student.full_name[0] if app.student else '?' }}</div>
+                                    <div>
+                                        <p class="mb-0 fw-semibold">{{ app.student.full_name if app.student else 'N/A' }}</p>
+                                        <small class="text-muted">{{ app.student.college if app.student else '' }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><small class="fw-semibold">{{ app.internship.title if app.internship else 'N/A' }}</small></td>
+                            <td><small>{{ app.applied_at.strftime('%d %b %Y') if app.applied_at else '—' }}</small></td>
+                            <td>
+                                {% set score = app.resume_score | float %}
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="progress" style="width:60px;height:6px">
+                                        <div class="progress-bar bg-{{ 'success' if score>70 else 'warning' if score>40 else 'danger' }}" style="width:{{ score }}%"></div>
+                                    </div>
+                                    <small>{{ "%.1f"|format(score) }}%</small>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge rounded-pill bg-{{ 'warning text-dark' if app.status=='pending' else 'success' if app.status=='approved' else 'danger' }}">
+                                    {{ app.status.capitalize() }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if app.status == 'pending' %}
+                                <div class="d-flex gap-1">
+                                    <form method="POST" action="{{ url_for('admin.approve_application', app_id=app.id) }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button class="btn btn-sm btn-success rounded-pill" title="Approve"><i class="fas fa-check me-1"></i>Approve</button>
+                                    </form>
+                                    <form method="POST" action="{{ url_for('admin.reject_application', app_id=app.id) }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button class="btn btn-sm btn-danger rounded-pill" title="Reject"><i class="fas fa-times me-1"></i>Reject</button>
+                                    </form>
+                                </div>
+                                {% else %}
+                                <span class="text-muted small">{{ app.admin_remarks or '—' }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="7" class="text-center py-5 text-muted">No applications found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

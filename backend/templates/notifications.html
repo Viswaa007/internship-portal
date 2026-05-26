@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="container py-5 mt-5">
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+
+                <!-- Header -->
+                <div class="bg-warning text-dark p-4 d-flex justify-content-between align-items-center">
+
+                    <h3 class="mb-0 fw-bold">
+                        <i class="fas fa-bell me-2"></i>
+                        Notifications
+                    </h3>
+
+                    <!-- Notification Count -->
+                    <span class="badge bg-danger fs-6 d-none"
+                          id="notificationCount">
+                        0
+                    </span>
+
+                </div>
+
+                <!-- Notification List -->
+                <div class="card-body p-0" id="notificationList">
+
+                    <!-- Notifications will come here dynamically -->
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+<script>
+
+// Empty Notification Data
+let notifications = [];
+
+// Render Notifications
+function renderNotifications() {
+
+    const list = document.getElementById("notificationList");
+    const count = document.getElementById("notificationCount");
+
+    list.innerHTML = "";
+
+    // Hide Count if no notification
+    if (notifications.length === 0) {
+
+        count.classList.add("d-none");
+
+        list.innerHTML = `
+
+            <div class="text-center p-5">
+
+                <i class="fas fa-bell-slash text-muted fs-1 mb-3"></i>
+
+                <h5 class="text-muted">
+                    No Notifications
+                </h5>
+
+            </div>
+
+        `;
+
+        return;
+    }
+
+    // Show Count
+    count.classList.remove("d-none");
+    count.innerText = notifications.length;
+
+    // Notification Items
+    notifications.forEach((n, index) => {
+
+        list.innerHTML += `
+
+            <div class="d-flex align-items-start p-4 border-bottom notification-item"
+                 style="cursor:pointer;"
+                 onclick="removeNotification(${index})">
+
+                <div class="me-3">
+
+                    <div class="bg-${n.color} text-white rounded-circle d-flex align-items-center justify-content-center"
+                         style="width:50px;height:50px;">
+
+                        <i class="fas ${n.icon}"></i>
+
+                    </div>
+
+                </div>
+
+                <div class="flex-grow-1">
+
+                    <h5 class="mb-1 fw-semibold">
+                        ${n.title}
+                    </h5>
+
+                    <p class="text-muted mb-1">
+                        ${n.message}
+                    </p>
+
+                    <small class="text-secondary">
+                        ${n.time}
+                    </small>
+
+                </div>
+
+            </div>
+
+        `;
+
+    });
+
+}
+
+// Remove Notification When Seen
+function removeNotification(index) {
+
+    notifications.splice(index, 1);
+
+    renderNotifications();
+
+}
+
+// Example Add Notification Function
+function addNotification(message, icon="fa-info-circle", color="primary") {
+
+    notifications.unshift({
+
+        message: message,
+        icon: icon,
+        color: color
+
+    });
+
+    renderNotifications();
+
+}
+
+// Initial Load
+renderNotifications();
+
+</script>
+
+{% endblock %}

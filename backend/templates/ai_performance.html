@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block title %}AI Performance Predictor | Internship Portal{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-4">
+    <div class="page-header mb-4">
+        <h2 class="page-title"><i class="fas fa-brain me-2 text-success"></i>AI Performance Predictor</h2>
+        <p class="text-muted">Predict student performance using Machine Learning (Random Forest + Logistic Regression)</p>
+    </div>
+
+    <div class="row g-4">
+        <!-- Input Form -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-transparent border-0">
+                    <h5 class="fw-semibold mb-0"><i class="fas fa-sliders-h me-2 text-primary"></i>Enter Performance Metrics</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form id="perfPredictForm">
+                        <!-- Attendance -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold d-flex justify-content-between">
+                                <span><i class="fas fa-calendar-check me-2 text-success"></i>Attendance Percentage</span>
+                                <span class="text-primary fw-bold" id="att_val">{{ metrics.attendance_pct or 75 }}%</span>
+                            </label>
+                            <input type="range" class="form-range" id="inp_attendance"
+                                   min="0" max="100" step="1"
+                                   value="{{ metrics.attendance_pct or 75 }}"
+                                   oninput="document.getElementById('att_val').textContent=this.value+'%'">
+                            <div class="d-flex justify-content-between"><small class="text-muted">0%</small><small class="text-muted">100%</small></div>
+                        </div>
+
+                        <!-- Task Completion -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold d-flex justify-content-between">
+                                <span><i class="fas fa-tasks me-2 text-primary"></i>Task Completion Rate</span>
+                                <span class="text-primary fw-bold" id="task_val">{{ metrics.task_completion or 70 }}%</span>
+                            </label>
+                            <input type="range" class="form-range" id="inp_tasks"
+                                   min="0" max="100" step="1"
+                                   value="{{ metrics.task_completion or 70 }}"
+                                   oninput="document.getElementById('task_val').textContent=this.value+'%'">
+                            <div class="d-flex justify-content-between"><small class="text-muted">0%</small><small class="text-muted">100%</small></div>
+                        </div>
+
+                        <!-- Report Submissions -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-file-alt me-2 text-warning"></i>Report Submissions (approved)
+                            </label>
+                            <input type="number" class="form-control" id="inp_reports"
+                                   min="0" max="20" value="{{ metrics.report_submissions or 3 }}"
+                                   placeholder="Number of approved reports">
+                        </div>
+
+                        <!-- Mentor Rating -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold d-flex justify-content-between">
+                                <span><i class="fas fa-star me-2 text-warning"></i>Mentor Rating</span>
+                                <span class="text-warning fw-bold" id="rat_val">3.0 / 5</span>
+                            </label>
+                            <input type="range" class="form-range" id="inp_rating"
+                                   min="1" max="5" step="0.5" value="3.0"
+                                   oninput="document.getElementById('rat_val').textContent=this.value+' / 5'">
+                            <div class="d-flex justify-content-between"><small class="text-muted">1 ⭐</small><small class="text-muted">5 ⭐</small></div>
+                        </div>
+
+                        <button type="submit" class="btn btn-success btn-lg w-100 rounded-pill">
+                            <i class="fas fa-brain me-2"></i>Predict Performance
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- How It Works -->
+            <div class="card border-0 shadow-sm rounded-4 mt-4">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="fw-semibold mb-0"><i class="fas fa-info-circle me-2 text-info"></i>How It Works</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2"><span class="badge bg-success me-2">30%</span>Attendance Percentage</li>
+                        <li class="mb-2"><span class="badge bg-primary me-2">35%</span>Task Completion Rate</li>
+                        <li class="mb-2"><span class="badge bg-warning text-dark me-2">15%</span>Report Submissions</li>
+                        <li class="mb-2"><span class="badge bg-info me-2">20%</span>Mentor Rating</li>
+                    </ul>
+                    <hr class="my-2">
+                    <p class="text-muted small mb-0">
+                        <i class="fas fa-cogs me-1"></i>
+                        Ensemble model: Random Forest (65%) + Logistic Regression (35%)
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Box -->
+        <div class="col-lg-7">
+            <!-- Grade Reference -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-transparent border-0">
+                    <h6 class="fw-semibold mb-0"><i class="fas fa-graduation-cap me-2 text-warning"></i>Performance Grade Reference</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-6 col-md-3">
+                            <div class="text-center p-3 rounded-3" style="background:rgba(40,167,69,0.1);border:2px solid #28a745">
+                                <i class="fas fa-trophy fa-2x text-success mb-2"></i>
+                                <h6 class="fw-bold text-success mb-1">Excellent</h6>
+                                <small class="text-muted">Score ≥ 80%</small>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="text-center p-3 rounded-3" style="background:rgba(23,162,184,0.1);border:2px solid #17a2b8">
+                                <i class="fas fa-thumbs-up fa-2x text-info mb-2"></i>
+                                <h6 class="fw-bold text-info mb-1">Good</h6>
+                                <small class="text-muted">Score 65–79%</small>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="text-center p-3 rounded-3" style="background:rgba(255,193,7,0.1);border:2px solid #ffc107">
+                                <i class="fas fa-minus-circle fa-2x text-warning mb-2"></i>
+                                <h6 class="fw-bold text-warning mb-1">Average</h6>
+                                <small class="text-muted">Score 50–64%</small>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="text-center p-3 rounded-3" style="background:rgba(220,53,69,0.1);border:2px solid #dc3545">
+                                <i class="fas fa-exclamation-triangle fa-2x text-danger mb-2"></i>
+                                <h6 class="fw-bold text-danger mb-1">Needs Work</h6>
+                                <small class="text-muted">Score &lt; 50%</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prediction Result rendered by JS -->
+            <div id="perfResultBox"></div>
+
+            <!-- Default placeholder -->
+            <div id="perfPlaceholder" class="card border-0 shadow-sm rounded-4">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-chart-line fa-4x text-muted mb-3 opacity-50"></i>
+                    <h5 class="text-muted">Prediction result will appear here</h5>
+                    <p class="text-muted small">Adjust the sliders and click <strong>Predict Performance</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Hide placeholder when result appears
+document.getElementById('perfPredictForm').addEventListener('submit', function() {
+    document.getElementById('perfPlaceholder').style.display = 'none';
+});
+</script>
+{% endblock %}

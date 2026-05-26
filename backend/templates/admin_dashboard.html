@@ -1,0 +1,226 @@
+<!-- =============================================================
+     File: backend/templates/admin_dashboard.html
+     Purpose: Admin dashboard with analytics and overview
+     ============================================================= -->
+{% extends "base.html" %}
+{% block title %}Admin Dashboard | AI Internship Portal{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-4">
+
+    <!-- Page Header -->
+    <div class="page-header mb-4">
+        <h2 class="page-title"><i class="fas fa-tachometer-alt me-2 text-primary"></i>Admin Dashboard</h2>
+        <p class="text-muted">Welcome back! Here's what's happening today.</p>
+    </div>
+
+    <!-- ================= STATS CARDS ================= -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card stat-card-primary">
+                <div class="stat-icon"><i class="fas fa-user-graduate"></i></div>
+                <div class="stat-content">
+                    <h3>{{ stats.total_students }}</h3>
+                    <p>Total Students</p>
+                </div>
+                <a href="{{ url_for('admin.students') }}" class="stat-link">View all <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card stat-card-success">
+                <div class="stat-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+                <div class="stat-content">
+                    <h3>{{ stats.total_mentors }}</h3>
+                    <p>Total Mentors</p>
+                </div>
+                <a href="{{ url_for('admin.mentors') }}" class="stat-link">View all <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card stat-card-warning">
+                <div class="stat-icon"><i class="fas fa-briefcase"></i></div>
+                <div class="stat-content">
+                    <h3>{{ stats.active_internships }}</h3>
+                    <p>Active Internships</p>
+                </div>
+                <a href="{{ url_for('admin.internships') }}" class="stat-link">Manage <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card stat-card-danger">
+                <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                <div class="stat-content">
+                    <h3>{{ stats.pending_applications }}</h3>
+                    <p>Pending Applications</p>
+                </div>
+                <a href="{{ url_for('admin.applications') }}" class="stat-link">Review <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= CHARTS ROW ================= -->
+    <div class="row g-4 mb-4">
+        <!-- Internship Applications Chart -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <h5 class="card-title fw-semibold mb-0">
+                        <i class="fas fa-chart-bar me-2 text-primary"></i>Internship Applications Overview
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="applicationsChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+        <!-- Quick Stats Donut -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-transparent border-0 pb-0">
+                    <h5 class="card-title fw-semibold mb-0">
+                        <i class="fas fa-chart-pie me-2 text-success"></i>Status Overview
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="statusChart" height="190"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= RECENT APPLICATIONS TABLE ================= -->
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+                    <h5 class="fw-semibold mb-0"><i class="fas fa-list me-2 text-info"></i>Recent Applications</h5>
+                    <a href="{{ url_for('admin.applications') }}" class="btn btn-sm btn-outline-primary rounded-pill">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">#</th>
+                                    <th>Student</th>
+                                    <th>Internship</th>
+                                    <th>Applied</th>
+                                    <th>Resume Score</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for app in recent_applications %}
+                                <tr>
+                                    <td class="ps-4">{{ loop.index }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm me-2">{{ app.student.full_name[0] }}</div>
+                                            <div>
+                                                <p class="mb-0 fw-semibold">{{ app.student.full_name }}</p>
+                                                <small class="text-muted">{{ app.student.college or 'N/A' }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ app.internship.title }}</td>
+                                    <td>{{ app.applied_at.strftime('%d %b %Y') if app.applied_at else 'N/A' }}</td>
+                                    <td>
+                                        <div class="progress" style="height:6px; width:80px">
+                                            <div class="progress-bar bg-{{ 'success' if app.resume_score > 70 else 'warning' if app.resume_score > 40 else 'danger' }}"
+                                                 style="width:{{ app.resume_score }}%"></div>
+                                        </div>
+                                        <small>{{ app.resume_score }}%</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge rounded-pill bg-{{ 'success' if app.status == 'approved' else 'danger' if app.status == 'rejected' else 'warning' }}">
+                                            {{ app.status.capitalize() }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if app.status == 'pending' %}
+                                        <form method="POST" action="{{ url_for('admin.approve_application', app_id=app.id) }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button class="btn btn-sm btn-success rounded-pill"><i class="fas fa-check"></i></button>
+                                        </form>
+                                        <form method="POST" action="{{ url_for('admin.reject_application', app_id=app.id) }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button class="btn btn-sm btn-danger rounded-pill"><i class="fas fa-times"></i></button>
+                                        </form>
+                                        {% else %}
+                                        <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="7" class="text-center py-4 text-muted">No applications yet.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ---- Internship Applications Bar Chart ----
+const appData = {{ internship_stats | tojson | safe }};
+const labels = appData.map(d => d.title.substring(0, 20) + '...');
+const approvedData = appData.map(d => d.approved);
+const pendingData = appData.map(d => d.pending);
+
+new Chart(document.getElementById('applicationsChart'), {
+    type: 'bar',
+    data: {
+        labels: labels.length ? labels : ['No Internships Yet'],
+        datasets: [
+            {
+                label: 'Approved',
+                data: approvedData.length ? approvedData : [0],
+                backgroundColor: 'rgba(40, 167, 69, 0.8)',
+                borderRadius: 6
+            },
+            {
+                label: 'Pending',
+                data: pendingData.length ? pendingData : [0],
+                backgroundColor: 'rgba(255, 193, 7, 0.8)',
+                borderRadius: 6
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { position: 'top' } },
+        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+    }
+});
+
+// ---- Status Donut Chart ----
+new Chart(document.getElementById('statusChart'), {
+    type: 'doughnut',
+    data: {
+        labels: ['Students', 'Mentors', 'Active Internships', 'Pending Reports'],
+        datasets: [{
+            data: [
+                {{ stats.total_students }},
+                {{ stats.total_mentors }},
+                {{ stats.active_internships }},
+                {{ stats.pending_reports }}
+            ],
+            backgroundColor: ['#0d6efd', '#198754', '#ffc107', '#dc3545'],
+            borderWidth: 0,
+            hoverOffset: 8
+        }]
+    },
+    options: {
+        responsive: true,
+        cutout: '65%',
+        plugins: { legend: { position: 'bottom' } }
+    }
+});
+</script>
+{% endblock %}

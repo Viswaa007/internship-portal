@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block title %}Reports | AI Internship Portal{% endblock %}
+{% block content %}
+<div class="container-fluid py-4 px-4">
+    <div class="page-header mb-4 d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="page-title"><i class="fas fa-file-alt me-2 text-info"></i>Reports</h2>
+            <p class="text-muted mb-0">
+                {% if role == 'student' %}Submit and track your internship reports{% else %}Review and approve student reports{% endif %}
+            </p>
+        </div>
+        {% if role == 'student' %}
+        <a href="{{ url_for('student.submit_report') }}" class="btn btn-info text-white rounded-pill px-4">
+            <i class="fas fa-upload me-2"></i>Submit New Report
+        </a>
+        {% endif %}
+    </div>
+
+    <!-- Report Stats -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3 col-6">
+            <div class="stat-card stat-card-warning">
+                <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                <div class="stat-content">
+                    <h3>{{ reports | selectattr('status','equalto','pending') | list | length }}</h3>
+                    <p>Pending Review</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="stat-card stat-card-info">
+                <div class="stat-icon"><i class="fas fa-eye"></i></div>
+                <div class="stat-content">
+                    <h3>{{ reports | selectattr('status','equalto','reviewed') | list | length }}</h3>
+                    <p>Reviewed</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="stat-card stat-card-success">
+                <div class="stat-icon"><i class="fas fa-check-double"></i></div>
+                <div class="stat-content">
+                    <h3>{{ reports | selectattr('status','equalto','approved') | list | length }}</h3>
+                    <p>Approved</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="stat-card stat-card-danger">
+                <div class="stat-icon"><i class="fas fa-times-circle"></i></div>
+                <div class="stat-content">
+                    <h3>{{ reports | selectattr('status','equalto','rejected') | list | length }}</h3>
+                    <p>Rejected</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports Table -->
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+            <h5 class="fw-semibold mb-0"><i class="fas fa-list me-2"></i>Report History</h5>
+            <span class="badge bg-primary rounded-pill">{{ reports|length }} Total</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">#</th>
+                            {% if role != 'student' %}<th>Student</th>{% endif %}
+                            <th>Report Title</th>
+                            <th>Type</th>
+                            <th>Submitted</th>
+                            <th>Status</th>
+                            <th>Feedback</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in reports %}
+                        <tr>
+                            <td class="ps-4">{{ loop.index }}</td>
+                            {% if role != 'student' %}
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm me-2">{{ report.student.full_name[0] if report.student else '?' }}</div>
+                                    <small class="fw-semibold">{{ report.student.full_name if report.student else 'N/A' }}</small>
+                                </div>
+                            </td>
+                            {% endif %}
+                            <td>
+                                <p class="mb-0 fw-semibold">{{ report.title }}</p>
+                                {% if report.file_path %}
+                                <small class="text-muted"><i class="fas fa-paperclip me-1"></i>File attached</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge bg-{{
+                                    'primary' if report.report_type=='weekly'
+                                    else 'purple' if report.report_type=='monthly'
+                                    else 'dark' }} rounded-pill">
+                                    {{ report.report_type.capitalize() }}
+                                </span>
+                            </td>
+                            <td>
+                                <small>{{ report.submitted_at.strftime('%d %b %Y') if report.submitted_at else '—' }}</small>
+                                <br><small class="text-muted">{{ report.submitted_at.strftime('%I:%M %p') if report.submitted_at else '' }}</small>
+                            </td>
+                            <td>
+                                <span class="badge rounded-pill bg-{{
+                                    'warning text-dark' if report.status=='pending'
+                                    else 'info' if report.status=='reviewed'
+                                    else 'success' if report.status=='approved'
+                                    else 'danger' }}">
+                                    {{ report.status.capitalize() }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if report.mentor_feedback %}
+                                <small class="text-muted" data-bs-toggle="tooltip" title="{{ report.mentor_feedback }}">
+                                    {{ report.mentor_feedback[:40] }}...
+                                </small>
+                                {% else %}
+                                <small class="text-muted">No feedback yet</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if role == 'mentor' and report.status == 'pending' %}
+                                <button class="btn btn-sm btn-outline-primary rounded-pill"
+                                        data-bs-toggle="modal" data-bs-target="#reviewModal{{ report.id }}">
+                                    <i class="fas fa-edit me-1"></i>Review
+                                </button>
+                                <!-- Review Modal -->
+                                <div class="modal fade" id="reviewModal{{ report.id }}" tabindex="-1">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h6 class="modal-title">Review Report: {{ report.title }}</h6>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <form method="POST" action="{{ url_for('mentor.review_report', report_id=report.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <div class="modal-body">
+                                                    <label class="form-label fw-semibold">Feedback</label>
+                                                    <textarea name="feedback" class="form-control mb-3" rows="4" placeholder="Enter your feedback for this report..."></textarea>
+                                                    <label class="form-label fw-semibold">Update Status</label>
+                                                    <select name="status" class="form-select">
+                                                        <option value="reviewed">Mark as Reviewed</option>
+                                                        <option value="approved">Approve</option>
+                                                        <option value="rejected">Reject</option>
+                                                    </select>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-primary btn-sm">Submit Review</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% elif report.file_path %}
+                                <a href="{{ url_for('static', filename='uploads/' + report.file_path) }}"
+                                   class="btn btn-sm btn-outline-secondary rounded-pill" target="_blank">
+                                    <i class="fas fa-download me-1"></i>Download
+                                </a>
+                                {% else %}
+                                <span class="text-muted small">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="fas fa-file-alt fa-3x mb-3 d-block"></i>
+                                No reports found.
+                                {% if role == 'student' %}
+                                <br><a href="{{ url_for('student.submit_report') }}" class="btn btn-sm btn-primary mt-3">Submit Your First Report</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+// Enable Bootstrap tooltips
+document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
+</script>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Assign Task | Mentor{% endblock %}
+{% block content %}
+<div class="container-fluid py-4 px-4">
+    <div class="page-header mb-4"><h2 class="page-title"><i class="fas fa-plus me-2 text-warning"></i>Assign New Task</h2></div>
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for c,m in messages %}<div class="alert alert-{{ c }}">{{ m }}</div>{% endfor %}{% endif %}{% endwith %}
+                    <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Select Student *</label>
+                            <select class="form-select" name="student_id" id="studentSelect" required onchange="updateInternship(this)">
+                                <option value="">— Select Student —</option>
+                                {% for item in students %}
+                                <option value="{{ item.student.id }}" data-internship="{{ item.internship_id }}">{{ item.student.full_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <input type="hidden" name="internship_id" id="internshipId">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Task Title *</label>
+                            <input type="text" class="form-control" name="title" required placeholder="e.g. Build a REST API for user management">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Description</label>
+                            <textarea class="form-control" name="description" rows="4" placeholder="Detailed task instructions..."></textarea>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Deadline *</label>
+                                <input type="date" class="form-control" name="deadline" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Priority</label>
+                                <select class="form-select" name="priority">
+                                    <option value="low">Low</option>
+                                    <option value="medium" selected>Medium</option>
+                                    <option value="high">High</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mt-4 d-flex gap-2">
+                            <button type="submit" class="btn btn-warning text-dark rounded-pill px-4"><i class="fas fa-save me-2"></i>Assign Task</button>
+                            <a href="{{ url_for('mentor.dashboard') }}" class="btn btn-outline-secondary rounded-pill px-4">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+function updateInternship(select) {
+    const option = select.options[select.selectedIndex];
+    document.getElementById('internshipId').value = option.dataset.internship || '';
+}
+</script>
+{% endblock %}

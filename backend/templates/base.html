@@ -1,0 +1,580 @@
+<!-- =============================================================
+     File: backend/templates/base.html
+     Purpose: Base template - all pages extend this
+     ============================================================= -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AI Internship Portal{% endblock %}</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+
+    <!-- =========================================================
+     NAVBAR
+     ========================================================= -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top" id="mainNavbar">
+        <div class="container-fluid">
+
+            <!-- LOGO -->
+            <a class="navbar-brand fw-bold" href="#">
+                <i class="fas fa-graduation-cap me-2"></i>
+                InternAI Portal
+            </a>
+
+            <!-- MOBILE TOGGLE -->
+            <button class="navbar-toggler" type="button" id="sidebarToggle">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <!-- RIGHT NAV -->
+            <div class="navbar-nav ms-auto d-flex flex-row align-items-center">
+
+                {% if current_user.is_authenticated %}
+
+                <!-- ================= NOTIFICATION ================= -->
+                <div class="dropdown me-3">
+
+                    <a class="nav-link position-relative" href="#" role="button" data-bs-toggle="dropdown"
+                        id="notificationBell">
+
+                        <i class="fas fa-bell fs-5"></i>
+
+                        <!-- Notification Count -->
+                        <span
+                            class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none"
+                            id="notificationCount">
+                            0
+                        </span>
+
+                    </a>
+
+                    <!-- Notification Dropdown -->
+                    <ul class="dropdown-menu dropdown-menu-end shadow" style="width:320px;" id="notificationList">
+
+                        <li>
+                            <h6 class="dropdown-header">
+                                Notifications
+                            </h6>
+                        </li>
+
+                        <!-- Empty Notification -->
+                        <li id="emptyNotification">
+
+                            <div class="text-center p-3 text-muted">
+
+                                <i class="fas fa-bell-slash mb-2"></i><br>
+
+                                No Notifications
+
+                            </div>
+
+                        </li>
+
+                    </ul>
+
+                </div>
+
+                <script>
+
+                    // ================= NOTIFICATIONS =================
+
+                    // Load Notifications from Storage
+                    let notifications =
+                        JSON.parse(localStorage.getItem("notifications")) || [];
+
+                    // Save Notifications
+                    function saveNotifications() {
+
+                        localStorage.setItem(
+                            "notifications",
+                            JSON.stringify(notifications)
+                        );
+
+                    }
+
+                    // Render Notifications
+                    function renderNotifications() {
+
+                        const list =
+                            document.getElementById("notificationList");
+
+                        const count =
+                            document.getElementById("notificationCount");
+
+                        // Reset
+                        list.innerHTML = `
+
+        <li>
+            <h6 class="dropdown-header">
+                Notifications
+            </h6>
+        </li>
+
+    `;
+
+                        // Empty Notifications
+                        if (notifications.length === 0) {
+
+                            count.classList.add("d-none");
+
+                            list.innerHTML += `
+
+            <li>
+
+                <div class="text-center p-3 text-muted">
+
+                    <i class="fas fa-bell-slash mb-2"></i><br>
+
+                    No Notifications
+
+                </div>
+
+            </li>
+
+        `;
+
+                            return;
+                        }
+
+                        // Show Count
+                        count.classList.remove("d-none");
+
+                        count.innerText = notifications.length;
+
+                        // Notifications List
+                        notifications.forEach((n, index) => {
+
+                            list.innerHTML += `
+
+            <li>
+
+                <div class="dropdown-item py-2"
+                     style="cursor:pointer;"
+                     onclick="removeNotification(${index})">
+
+                    <i class="fas ${n.icon} me-2 text-${n.color}"></i>
+
+                    ${n.message}
+
+                </div>
+
+            </li>
+
+        `;
+
+                        });
+
+                    }
+
+                    // Add Notification
+                    function addNotification(
+                        message,
+                        icon = "fa-info-circle",
+                        color = "primary"
+                    ) {
+
+                        notifications.unshift({
+
+                            message: message,
+                            icon: icon,
+                            color: color
+
+                        });
+
+                        saveNotifications();
+
+                        renderNotifications();
+
+                    }
+
+                    // Remove Notification
+                    function removeNotification(index) {
+
+                        notifications.splice(index, 1);
+
+                        saveNotifications();
+
+                        renderNotifications();
+
+                    }
+
+                    // Initial Render
+                    renderNotifications();
+
+                </script>
+
+                <!-- USER -->
+                <div class="dropdown ms-2">
+
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button"
+                        data-bs-toggle="dropdown">
+
+                        <!-- PROFILE IMAGE -->
+                        {% if current_user.role == 'student'
+                        and current_user.student_profile
+                        and current_user.student_profile.profile_pic %}
+
+                        <img src="{{ url_for('static', filename='uploads/' + current_user.student_profile.profile_pic) }}"
+                            class="rounded-circle me-2" width="40" height="40"
+                            style="object-fit:cover; border:2px solid #4e73df;">
+
+                        {% else %}
+
+                        <div class="user-avatar me-2">
+                            {{ current_user.username[0].upper() }}
+                        </div>
+
+                        {% endif %}
+
+                        <span class="d-none d-md-inline">
+                            {{ current_user.username }}
+                        </span>
+
+                    </a>
+
+                    <ul class="dropdown-menu dropdown-menu-end shadow">
+
+                        <li>
+                            <h6 class="dropdown-header">
+                                {{ current_user.role.capitalize() }}
+                            </h6>
+                        </li>
+
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item" href="/profile">
+                                <i class="fas fa-user me-2"></i>
+                                Profile
+                            </a>
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item" href="/settings">
+                                <i class="fas fa-cog me-2"></i>
+                                Settings
+                            </a>
+                        </li>
+
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">
+
+                                <i class="fas fa-sign-out-alt me-2"></i>
+                                Logout
+                            </a>
+                        </li>
+
+                    </ul>
+                </div>
+
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- =========================================================
+     SIDEBAR
+     ========================================================= -->
+    {% if current_user.is_authenticated %}
+
+    <div class="sidebar" id="sidebar">
+
+        <!-- SIDEBAR HEADER -->
+        <div class="sidebar-header">
+
+            <div class="user-info text-center py-3">
+
+                <!-- PROFILE IMAGE -->
+                {% if current_user.role == 'student'
+                and current_user.student_profile
+                and current_user.student_profile.profile_pic %}
+
+                <img src="{{ url_for('static', filename='uploads/' + current_user.student_profile.profile_pic) }}"
+                    class="rounded-circle shadow mx-auto mb-2" width="80" height="80"
+                    style="object-fit:cover; border:3px solid #4e73df;">
+
+                {% else %}
+
+                <div class="user-avatar-lg mx-auto mb-2">
+                    {{ current_user.username[0].upper() }}
+                </div>
+
+                {% endif %}
+
+                <p class="mb-0 fw-semibold text-white">
+                    {{ current_user.username }}
+                </p>
+
+                <small class="badge bg-primary">
+                    {{ current_user.role.capitalize() }}
+                </small>
+
+            </div>
+        </div>
+
+        <!-- NAVIGATION -->
+        <nav class="sidebar-nav">
+
+            <ul class="nav flex-column">
+
+                <!-- ================= ADMIN ================= -->
+                {% if current_user.role == 'admin' %}
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Dashboard
+                    </a>
+                </li>
+
+                <li class="nav-section-title">MANAGEMENT</li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin.students') }}">
+                        <i class="fas fa-user-graduate"></i>
+                        Students
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin.mentors') }}">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                        Mentors
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin.internships') }}">
+                        <i class="fas fa-briefcase"></i>
+                        Internships
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin.applications') }}">
+                        <i class="fas fa-file-alt"></i>
+                        Applications
+                    </a>
+                </li>
+
+                <li class="nav-section-title">AI TOOLS</li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('ai.resume_analyze') }}">
+                        <i class="fas fa-robot"></i>
+                        Resume Analyzer
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('ai.performance_predict') }}">
+                        <i class="fas fa-chart-line"></i>
+                        Performance AI
+                    </a>
+                </li>
+
+                <!-- ================= MENTOR ================= -->
+                {% elif current_user.role == 'mentor' %}
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('mentor.dashboard') }}">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Dashboard
+                    </a>
+                </li>
+
+                <li class="nav-section-title">MY WORK</li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('mentor.students') }}">
+                        <i class="fas fa-users"></i>
+                        My Students
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('mentor.tasks') }}">
+                        <i class="fas fa-tasks"></i>
+                        Tasks
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('mentor.reports') }}">
+                        <i class="fas fa-file-upload"></i>
+                        Reports
+                    </a>
+                </li>
+
+                <li class="nav-section-title">AI TOOLS</li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('ai.performance_predict') }}">
+                        <i class="fas fa-brain"></i>
+                        Performance Predict
+                    </a>
+                </li>
+
+                <!-- ================= STUDENT ================= -->
+                {% elif current_user.role == 'student' %}
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('student.dashboard') }}">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Dashboard
+                    </a>
+                </li>
+
+                <li class="nav-section-title">MY INTERNSHIP</li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('student.internships') }}">
+                        <i class="fas fa-briefcase"></i>
+                        Internships
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('student.attendance') }}">
+                        <i class="fas fa-calendar-check"></i>
+                        Attendance
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('student.tasks') }}">
+                        <i class="fas fa-tasks"></i>
+                        My Tasks
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('student.reports') }}">
+                        <i class="fas fa-file-upload"></i>
+                        Reports
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('student.feedback') }}">
+                        <i class="fas fa-comments"></i>
+                        Feedback
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('student.certificates') }}">
+                        <i class="fas fa-certificate"></i>
+                        Certificates
+                    </a>
+                </li>
+
+                <li class="nav-section-title">AI TOOLS</li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('ai.resume_analyze') }}">
+                        <i class="fas fa-robot"></i>
+                        Resume Analyzer
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('ai.performance_predict') }}">
+                        <i class="fas fa-chart-line"></i>
+                        My Performance AI
+                    </a>
+                </li>
+
+                {% endif %}
+
+            </ul>
+
+        </nav>
+    </div>
+
+    {% endif %}
+
+    <!-- =========================================================
+     MAIN CONTENT
+     ========================================================= -->
+    <main class="main-content {% if current_user.is_authenticated %}with-sidebar{% endif %}">
+
+        <!-- FLASH -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+
+        <div class="container-fluid pt-3">
+
+            {% for category, message in messages %}
+
+            <div class="alert alert-{{ category }} alert-dismissible fade show">
+
+                {{ message }}
+
+                <button type="button" class="btn-close" data-bs-dismiss="alert">
+                </button>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+
+    </main>
+
+    <!-- =========================================================
+     FOOTER
+     ========================================================= -->
+    <footer class="footer {% if current_user.is_authenticated %}with-sidebar{% endif %}">
+        <div class="container-fluid">
+            <p class="text-center mb-0">
+                &copy; 2024 AI Internship Portal
+            </p>
+        </div>
+    </footer>
+
+    <!-- =========================================================
+     JS
+     ========================================================= -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    {% block extra_js %}{% endblock %}
+
+</body>
+
+</html>

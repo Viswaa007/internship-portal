@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}Certificates | AI Internship Portal{% endblock %}
+{% block content %}
+<div class="container-fluid py-4 px-4">
+    <div class="page-header mb-4">
+        <h2 class="page-title"><i class="fas fa-certificate me-2 text-warning"></i>Certificates</h2>
+        <p class="text-muted mb-0">Your earned internship completion certificates</p>
+    </div>
+
+    {% if certificates %}
+    <div class="row g-4">
+        {% for cert in certificates %}
+        <div class="col-lg-6">
+            <!-- Certificate Card -->
+            <div class="card border-0 shadow-sm rounded-4 certificate-card">
+                <!-- Gold Header -->
+                <div class="card-header text-center py-4" style="background: linear-gradient(135deg,#f7d774,#e8a800); border-radius:1rem 1rem 0 0;">
+                    <i class="fas fa-award fa-3x text-white mb-2"></i>
+                    <h5 class="fw-bold text-white mb-0">Certificate of Completion</h5>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Certificate Body -->
+                    <div class="text-center mb-4">
+                        <p class="text-muted mb-1">This certifies that</p>
+                        <h3 class="fw-bold text-primary mb-1">
+                            {{ cert.student.full_name if cert.student else 'N/A' }}
+                        </h3>
+                        <p class="text-muted mb-1">has successfully completed the internship in</p>
+                        <h5 class="fw-semibold text-dark mb-1">
+                            {{ cert.internship.title if cert.internship else 'N/A' }}
+                        </h5>
+                        {% if cert.internship and cert.internship.mentor %}
+                        <p class="text-muted small mb-0">
+                            Under the guidance of <strong>{{ cert.internship.mentor.full_name }}</strong>
+                        </p>
+                        {% endif %}
+                    </div>
+
+                    <hr>
+
+                    <!-- Certificate Details Grid -->
+                    <div class="row g-3 text-center">
+                        <div class="col-6">
+                            <div class="p-2 rounded-3 bg-light">
+                                <i class="fas fa-hashtag text-primary mb-1 d-block"></i>
+                                <small class="text-muted d-block">Cert. Number</small>
+                                <strong class="small">{{ cert.certificate_number }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2 rounded-3 bg-light">
+                                <i class="fas fa-calendar text-success mb-1 d-block"></i>
+                                <small class="text-muted d-block">Issued Date</small>
+                                <strong class="small">{{ cert.issued_date.strftime('%d %b %Y') if cert.issued_date else 'N/A' }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2 rounded-3 bg-light">
+                                <i class="fas fa-clock text-warning mb-1 d-block"></i>
+                                <small class="text-muted d-block">Duration</small>
+                                <strong class="small">{{ cert.internship.duration_weeks if cert.internship else 'N/A' }} Weeks</strong>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2 rounded-3 bg-light">
+                                <i class="fas fa-star text-danger mb-1 d-block"></i>
+                                <small class="text-muted d-block">Performance</small>
+                                <span class="badge rounded-pill bg-{{
+                                    'success' if cert.performance_grade=='Excellent'
+                                    else 'primary' if cert.performance_grade=='Good'
+                                    else 'warning text-dark' if cert.performance_grade=='Average'
+                                    else 'danger' }}">
+                                    {{ cert.performance_grade or 'N/A' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <!-- Actions -->
+                    <div class="d-flex gap-2 justify-content-center">
+                        <button class="btn btn-warning rounded-pill px-4" onclick="printCertificate('{{ cert.certificate_number }}')">
+                            <i class="fas fa-print me-2"></i>Print
+                        </button>
+                        {% if cert.file_path %}
+                        <a href="{{ url_for('static', filename='uploads/' + cert.file_path) }}"
+                           class="btn btn-outline-primary rounded-pill px-4" download>
+                            <i class="fas fa-download me-2"></i>Download PDF
+                        </a>
+                        {% endif %}
+                        <button class="btn btn-outline-success rounded-pill" onclick="shareCertificate('{{ cert.certificate_number }}')">
+                            <i class="fas fa-share-alt me-2"></i>Share
+                        </button>
+                    </div>
+                </div>
+                <!-- Verified Badge -->
+                <div class="card-footer bg-transparent text-center border-0 pb-3">
+                    <span class="text-success small"><i class="fas fa-shield-alt me-1"></i>Verified by AI Internship Portal</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <!-- No Certificates State -->
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 text-center py-5">
+                <div class="card-body">
+                    <div class="empty-state-icon mb-4">
+                        <i class="fas fa-certificate fa-4x" style="color:#e0e0e0"></i>
+                    </div>
+                    <h4 class="fw-bold text-muted mb-2">No Certificates Yet</h4>
+                    <p class="text-muted mb-4">
+                        Complete your internship with good attendance and task completion to earn your certificate.
+                    </p>
+                    <div class="row g-3 text-start mb-4">
+                        <div class="col-12">
+                            <div class="p-3 rounded-3 border d-flex align-items-center">
+                                <i class="fas fa-calendar-check fa-2x text-primary me-3"></i>
+                                <div><strong>Maintain ≥ 75%</strong> attendance throughout the internship</div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="p-3 rounded-3 border d-flex align-items-center">
+                                <i class="fas fa-tasks fa-2x text-success me-3"></i>
+                                <div><strong>Complete all tasks</strong> assigned by your mentor</div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="p-3 rounded-3 border d-flex align-items-center">
+                                <i class="fas fa-file-alt fa-2x text-info me-3"></i>
+                                <div><strong>Submit reports</strong> weekly and get them approved</div>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="{{ url_for('student.dashboard') }}" class="btn btn-primary rounded-pill px-4">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+function printCertificate(certNumber) {
+    alert('Print functionality: Certificate ' + certNumber + '\nIn production, this opens a printable PDF view.');
+}
+function shareCertificate(certNumber) {
+    const url = window.location.origin + '/verify/' + certNumber;
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => {
+            showToast('Certificate link copied to clipboard!', 'success');
+        });
+    } else {
+        alert('Share this link: ' + url);
+    }
+}
+function showToast(message, type) {
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type} position-fixed bottom-0 end-0 m-4 shadow`;
+    toast.style.zIndex = 9999;
+    toast.innerHTML = `<i class="fas fa-check-circle me-2"></i>${message}`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+</script>
+{% endblock %}

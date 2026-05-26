@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Internship Portal</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Google Sign-In -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <style>
+        :root { --primary: #0d6efd; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f0f4f8;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, #1e2a3a 0%, #2d4a7a 50%, #1e3a5f 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+
+        .hero-title {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 800;
+            font-size: 3rem;
+            color: white;
+        }
+
+        .hero-subtitle {
+            color: rgba(255,255,255,0.75);
+            font-size: 1.15rem;
+        }
+
+        .feature-card {
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 16px;
+            padding: 1.5rem;
+            color: white;
+            transition: 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-4px);
+            background: rgba(255,255,255,0.12);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .role-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+            transition: 0.3s;
+        }
+
+        .role-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        }
+
+        .role-avatar {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+        }
+
+        .stats-section {
+            background: white;
+            padding: 3rem 0;
+        }
+
+        .stat-num {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 800;
+        }
+    </style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero-section">
+    <div class="container py-5">
+        <div class="row align-items-center g-5">
+
+            <div class="col-lg-6">
+                <div class="mb-3">
+                    <span class="badge bg-primary px-3 py-2 rounded-pill fs-6">
+                        <i class="fas fa-robot me-2"></i>AI-Powered Platform
+                    </span>
+                </div>
+
+                <h1 class="hero-title mb-3">
+                    Internship<br>Management<br>
+                    <span style="color:#4dabf7">Made Smart</span>
+                </h1>
+
+                <p class="hero-subtitle mb-4">
+                    Manage internships end-to-end with AI resume screening,
+                    performance prediction, automated certificates,
+                    and real-time analytics.
+                </p>
+
+                <div class="d-flex gap-3 flex-wrap mb-3">
+                    <a href="/auth/login" class="btn btn-primary btn-lg rounded-pill px-4">
+                        <i class="fas fa-sign-in-alt me-2"></i>Login
+                    </a>
+
+                    <a href="/auth/register" class="btn btn-outline-light btn-lg rounded-pill px-4">
+                        <i class="fas fa-user-plus me-2"></i>Register
+                    </a>
+                </div>
+
+                <!-- Google Sign In -->
+                <div id="g_id_onload"
+                     data-client_id="651344307042-po21m3926n40uhd2oa24e3af3r9bfua7.apps.googleusercontent.com"
+                     data-callback="handleCredentialResponse">
+                </div>
+
+                <div class="g_id_signin"
+                     data-type="standard"
+                     data-size="large"
+                     data-theme="filled_blue"
+                     data-text="continue_with"
+                     data-shape="pill">
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="row g-3">
+
+                    <div class="col-6">
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-robot text-info"></i>
+                            </div>
+                            <h6>AI Resume Screener</h6>
+                            <p style="font-size:.8rem;">NLP-based skill extraction</p>
+                        </div>
+                    </div>
+
+                    <div class="col-6">
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-chart-line text-info"></i>
+                            </div>
+                            <h6>Performance Prediction</h6>
+                            <p style="font-size:.8rem;">ML predicts outcomes</p>
+                        </div>
+                    </div>
+
+                    <div class="col-6">
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-certificate text-info"></i>
+                            </div>
+                            <h6>Certificates</h6>
+                            <p style="font-size:.8rem;">Auto certificate generation</p>
+                        </div>
+                    </div>
+
+                    <div class="col-6">
+                        <div class="feature-card">
+                            <div class="feature-icon">
+                                <i class="fas fa-tasks text-info"></i>
+                            </div>
+                            <h6>Task Tracking</h6>
+                            <p style="font-size:.8rem;">Track tasks easily</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="py-4 text-center bg-dark text-light">
+    <p class="mb-0">
+        © 2024 <span class="text-info">AI Internship Portal</span>
+    </p>
+</footer>
+
+<script>
+function handleCredentialResponse(response) {
+    console.log(response);
+    alert("Google Login Success");
+}
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

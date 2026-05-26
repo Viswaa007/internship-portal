@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Internships | Admin{% endblock %}
+{% block content %}
+<div class="container-fluid py-4 px-4">
+    <div class="page-header mb-4 d-flex justify-content-between align-items-center">
+        <div><h2 class="page-title"><i class="fas fa-briefcase me-2 text-warning"></i>Internships</h2><p class="text-muted mb-0">Manage all internship programs</p></div>
+        <a href="{{ url_for('admin.add_internship') }}" class="btn btn-warning text-dark rounded-pill px-4"><i class="fas fa-plus me-2"></i>Create Internship</a>
+    </div>
+    <div class="row g-4">
+        {% for internship in internships %}
+        <div class="col-lg-6 col-xl-4">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <span class="badge rounded-pill bg-{{ 'success' if internship.status=='open' else 'secondary' if internship.status=='closed' else 'info' }}">{{ internship.status.capitalize() }}</span>
+                        <span class="badge bg-light text-dark border">{{ internship.domain or 'General' }}</span>
+                    </div>
+                    <h5 class="fw-bold mb-2">{{ internship.title }}</h5>
+                    <p class="text-muted small mb-3">{{ internship.description[:80] if internship.description else 'No description' }}...</p>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6"><small class="text-muted"><i class="fas fa-clock me-1"></i>{{ internship.duration_weeks }} weeks</small></div>
+                        <div class="col-6"><small class="text-muted"><i class="fas fa-users me-1"></i>{{ internship.get_approved_students_count() }}/{{ internship.max_students }} students</small></div>
+                        <div class="col-6"><small class="text-muted"><i class="fas fa-calendar me-1"></i>{{ internship.start_date.strftime('%d %b') if internship.start_date else 'TBD' }}</small></div>
+                        <div class="col-6"><small class="text-muted"><i class="fas fa-chalkboard-teacher me-1"></i>{{ internship.mentor.full_name[:15] if internship.mentor else 'Unassigned' }}</small></div>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted fw-semibold">Required Skills:</small>
+                        <div class="mt-1">
+                            {% if internship.required_skills %}
+                            {% for skill in internship.required_skills.split(',')[:3] %}
+                            <span class="badge bg-light text-dark border me-1">{{ skill.strip() }}</span>
+                            {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('admin.applications') }}" class="btn btn-sm btn-outline-primary rounded-pill flex-fill">Applications ({{ internship.applications.count() }})</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12 text-center py-5 text-muted">
+            <i class="fas fa-briefcase fa-3x mb-3 d-block"></i>No internships yet. <a href="{{ url_for('admin.add_internship') }}">Create one now.</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
