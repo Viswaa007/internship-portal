@@ -3,6 +3,7 @@ gunicorn
 flask-login
 flask-sqlalchemy
 flask-wtf
+flask-mail
 authlib
 python-dotenv
 email-validator
